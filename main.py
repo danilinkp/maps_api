@@ -5,34 +5,52 @@ import pygame
 import requests
 
 coords = ['37.620070', '55.753630']
-spn = ['0.1', '0.1']
+zoom = 10
 
 map_api_server = "http://static-maps.yandex.ru/1.x/"
 
 map_api_params = {
     "ll": ",".join(coords),
-    "spn": ",".join(spn),
+    "z": str(zoom),
     "l": "map"
 }
 response = requests.get(map_api_server, params=map_api_params)
 if not response:
     pass
 
-# Запишем полученное изображение в файл.
+
 map_file = "map.png"
 with open(map_file, "wb") as file:
     file.write(response.content)
 
-# Инициализируем pygame
-pygame.init()
-screen = pygame.display.set_mode((500, 450))
-# Рисуем картинку, загружаемую из только что созданного файла.
-screen.blit(pygame.image.load(map_file), (0, 0))
-# Переключаем экран и ждем закрытия окна.
-pygame.display.flip()
-while pygame.event.wait().type != pygame.QUIT:
-    pass
-pygame.quit()
 
-# Удаляем за собой файл с изображением.
+pygame.init()
+screen = pygame.display.set_mode((600, 450))
+running = True
+pygame.display.flip()
+scale = 5
+screen.blit(pygame.image.load(map_file), (0, 0))
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_PAGEUP:
+                if scale + 1 <= 19:
+                    scale += 1
+            if event.key == pygame.K_PAGEDOWN:
+                if scale - 1 >= 2:
+                    scale -= 1
+    zoom = str(scale)
+    map_api_params = {
+        "ll": ",".join(coords),
+        "z": zoom,
+        "l": "map"
+    }
+    response = requests.get(map_api_server, params=map_api_params)
+    map_file = "map.png"
+    with open(map_file, "wb") as file:
+        file.write(response.content)
+    screen.blit(pygame.image.load(map_file), (0, 0))
+    pygame.display.flip()
 os.remove(map_file)
